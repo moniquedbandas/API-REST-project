@@ -6,7 +6,9 @@ const PORT = 3333;
 const app = express();
 //estou inicializando o express e colocando dentro da constante app todos os recursos que vamos ter diposniveis do express.
 app.use(express.json());
+
 app.use(myMiddleware);
+//todas as rotas utilizarão esse middleware se for colocado antes de todas elas. "A ordem importa."
 
 app.get("/products", (request, response) => {
   const { page, limit } = request.query;
