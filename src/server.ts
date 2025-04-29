@@ -1,5 +1,6 @@
-import express from "express";
-import { myMiddleware } from "./middlewares/my-middleware";
+import express, { Request, Response, NextFunction } from "express";
+import { routes } from "./routes/index";
+import { AppError } from "./utils/app-error";
 //como esta usando o TS, nao precisa colocar a extensão
 
 const PORT = 3333;
@@ -7,17 +8,22 @@ const app = express();
 //estou inicializando o express e colocando dentro da constante app todos os recursos que vamos ter diposniveis do express.
 app.use(express.json());
 
-app.use(myMiddleware);
+app.use(routes);
+//esse abaixo é meu middleware global. so é global qdo TODAS as rotas podem usa-lo
+// app.use(myMiddleware);
 //todas as rotas utilizarão esse middleware se for colocado antes de todas elas. "A ordem importa."
 
-app.get("/products", (request, response) => {
-  const { page, limit } = request.query;
-  response.send(`Página ${page} de ${limit}`);
-});
-
-app.post("/products", (request, response) => {
-  const { name, price } = request.body;
-  response.status(201).json({ name, price });
-});
-
+/*
+erros:
+-erros do cliente -> 400 bad request
+-erros do servidor -> 500 erro interno do servidor
+*/
+app.use(
+  (error: any, request: Request, response: Response, next: NextFunction) => {
+    if (error instanceof AppError) {
+      return response.status(error.statusCode).json({ message: error.message });
+    }
+    response.status(500).json({ message: error.message });
+  }
+);
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
